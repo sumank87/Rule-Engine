@@ -14,7 +14,9 @@ namespace Rule_Engine_Challenge
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("Rule")]
-        public ObservableCollection<Rule> ListRule
+        
+        
+        public ObservableCollection<Rule> ListRule // A collection of rules
         {
             get
             {

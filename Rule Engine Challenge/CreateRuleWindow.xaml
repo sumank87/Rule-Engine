@@ -102,7 +102,7 @@
                         </Grid>
                     </Border>
                 </Grid>
-                <Grid Height="100" Background="BlueViolet">
+                <Grid Height="100" Background="BlueViolet" Visibility="Collapsed">
 
                 </Grid>
             </StackPanel>

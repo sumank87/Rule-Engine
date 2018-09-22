@@ -1,14 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Json;
-using System.Runtime.Serialization;
-using System.Xml.Serialization;
-using System.Collections.Generic;
+﻿using System.Runtime.Serialization;
 
 namespace Rule_Engine_Challenge
 {
     [DataContract]
-    public class TestCaseJsonData
+    public class TestCaseJsonData // Not being used as of now
     {
         //[DataMember(Name = "sreamData")]
         public StreamData[] sreamData { get; set; }
@@ -16,7 +11,7 @@ namespace Rule_Engine_Challenge
     }
 
     [DataContract(Name = "StreamData")]
-    public class StreamData
+    public class StreamData 
     {
         [DataMember(Name = "signal")]
         public string signal { get; set; }

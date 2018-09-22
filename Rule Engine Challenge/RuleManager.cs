@@ -9,16 +9,28 @@ using System.Xml.Serialization;
 
 namespace Rule_Engine_Challenge
 {
+    // Why Static Class? Initial thought was to use this class from multiple places and since this class has only one purpose
+    // which is manupulation with rules and rule database so better to use static class. No overhead of managing objects and fields
     public static class RuleManager
     {
-        private static string RuleFileName = "RuleDataBase.xml";
+        private static string RuleFileName = "RuleDataBase.xml"; // Name of data base which is xml file storing al rules details
 
+        // Directory where rule data will be store
         private static string DATA_DIR { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"RuleEngine"); } }
+        /// <summary>
+        /// Full path of rule database including database name and extension
+        /// </summary>
         public static string FullPath { get { return Uri.UnescapeDataString(Path.Combine(DATA_DIR, RuleFileName)); } }
-        private static XmlSerializer xmlSerializer = new XmlSerializer(typeof(RuleSets)); // 
-        private static XmlDocument xmlDocument = new XmlDocument();
+        private static XmlSerializer xmlSerializer = new XmlSerializer(typeof(RuleSets)); // Globle instance of XmlSerializer
+        private static XmlDocument xmlDocument = new XmlDocument(); // Globle instance of XmlDocument
 
+        /// <summary>
+        /// Main class for rules have collection of rules
+        /// </summary>
         public static RuleSets RuleSet = new RuleSets();
+        /// <summary>
+        /// Initialize RuleManager. Create XML database if not exist and load rule from database to ListRule collection for further use
+        /// </summary>
         public static void InitializeRuleManager()
         {
             if (!File.Exists(FullPath))
@@ -36,24 +48,38 @@ namespace Rule_Engine_Challenge
 
         private static void LoadRuleSets()
         {
+            // Read rule database using MemoryStream and Deserialize XML to RuleSets object
             MemoryStream memStream = new MemoryStream(File.ReadAllBytes(FullPath));
             RuleSet = xmlSerializer.Deserialize(memStream) as RuleSets;
         }
 
+        /// <summary>
+        /// Write new rule and save it to rule database
+        /// </summary>
+        /// <param name="sngnal">Signal</param>
+        /// <param name="dataType">Data Type</param>
+        /// <param name="option">Option</param>
+        /// <param name="value">Value</param>
         public static void WriteNewRule(string sngnal,string dataType, string option, string value)
         {
+            // Add new rule and save it to rule database
             RuleSet.ListRule.Insert(0, new Rule { SignalID = GetUniqueID(), Signal = sngnal, DataType = dataType, Option = option, Value = value });
 
             SaveXMLFile();
         }
 
+        /// <summary>
+        /// Delete a rule from rule database, Update Signal ID and save it
+        /// </summary>
+        /// <param name="signalID">Unique Signal ID</param>
         public static void DeleteRule(int signalID)
         {
             RuleSet.ListRule.Remove(RuleSet.ListRule.Where(x => x.SignalID == signalID).FirstOrDefault());
-            UpdateSignalID();
+            UpdateSignalID(); // After deleting rule update remaining rule's Signal ID
             //SaveXMLFile();
         }
 
+        // Update Signal ID and Save it to rule database
         private static void UpdateSignalID()
         {
             int count = 0;
@@ -64,7 +90,7 @@ namespace Rule_Engine_Challenge
             SaveXMLFile();
         }
 
-        private static void SaveXMLFile()
+        private static void SaveXMLFile() // Logic for saving rule to database
         {
             using (MemoryStream xmlStream = new MemoryStream())
             {
@@ -76,7 +102,8 @@ namespace Rule_Engine_Challenge
             }
         }
 
-        private static int GetUniqueID()
+
+        private static int GetUniqueID()// Logic for creating new unique Signal ID
         {
             if (RuleSet.ListRule.Count.Equals(0))
                 return 1;

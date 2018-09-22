@@ -11,6 +11,8 @@ namespace Rule_Engine_Challenge
     /// </summary>
     public partial class CreateRuleWindow : Window
     {
+        // Name of list is telling every this about type of list.
+        // All lists will be set as DataContext/ItemsSources for ListViews
         List<string> ListSignal = new List<string> { "-- Select Signal --", "ATL1", "ATL2", "ATL3", "ATL4", "ATL5", "ATL6", "ATL7", "ATL8", "ATL9","ATL10" };
         List<string> ListValueType = new List<string> { "-- Select Value Type --", "Integer", "Datetime", "String" };
         List<string> ListIntegerOptions = new List<string> { "-- Choose an Option --","should be greater than", "should not be greater than","should be less than", "should not be less than", "should be equal to", "should not be equal to" };
@@ -27,31 +29,38 @@ namespace Rule_Engine_Challenge
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // ItemsSources should be set only after windows creation
             ComboSignal.ItemsSource = ListSignal;
-            ComboSignal.SelectedItem = ListSignal[0];
+            ComboSignal.SelectedItem = ListSignal[0]; // By default select 1st item, i.e. kins of title of listview
             ComboDataType.ItemsSource = ListValueType;
-            ComboDataType.SelectedItem = ListValueType[0];
-            Owner = mainWindow;
+            ComboDataType.SelectedItem = ListValueType[0]; // By default select 1st item, i.e. kins of title of listview
+            Owner = mainWindow; // This will make CreateRuleWindow always on top of MainWindow
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // Don't close just hide this window. We will be showing this window again if user wants to create new rule again
             e.Cancel = true;
-            Hide();
+            Hide(); 
         }
 
         private void BtnCreate_Click(object sender, RoutedEventArgs e)
         {
+            // If data type is integer take value from Textbox esle from Combobox
             if (ComboDataType.SelectedIndex == 1)
                 RuleManager.WriteNewRule(ComboSignal.SelectedValue.ToString(), ComboDataType.SelectedValue.ToString(), ComboOptions.SelectedValue.ToString(), TextboxValue.Text);
             else
                 RuleManager.WriteNewRule(ComboSignal.SelectedValue.ToString(), ComboDataType.SelectedValue.ToString(), ComboOptions.SelectedValue.ToString(), ComboValue.SelectedValue.ToString());
-            bool IsContinue = CheckBoxContinue.IsChecked == null ? false : (bool)CheckBoxContinue.IsChecked;
+
+            // After creating new rule reset all comboboxs and textbox
             ComboSignal.SelectedIndex = 0;
             ComboDataType.SelectedIndex = 0;
             ComboOptions.SelectedIndex = 0;
             ComboValue.SelectedIndex = 0;
             TextboxValue.Text = string.Empty;
+
+            // If user don't wants to continue making new rule hide this window
+            bool IsContinue = CheckBoxContinue.IsChecked == null ? false : (bool)CheckBoxContinue.IsChecked;
             if (!IsContinue)
             {
                 Hide();
@@ -60,6 +69,7 @@ namespace Rule_Engine_Challenge
 
         private void ComboDataType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // set ComboOptions itemsSource based on data type selected
             if (ComboDataType.SelectedIndex == 1)
             {
                 ComboOptions.IsEnabled = true;
@@ -98,6 +108,7 @@ namespace Rule_Engine_Challenge
 
         private void ComboOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Make a call if Value files should be enabled or not
             if (ComboOptions.SelectedIndex == 0)
                 GridValue.IsEnabled = false;
             else
@@ -107,6 +118,7 @@ namespace Rule_Engine_Challenge
 
         private void TextboxValue_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
+            // restricts user if they are trying to put any things other than doule value in text field
             char c = Convert.ToChar(e.Text);
             if (char.IsNumber(c) || !TextboxValue.Text.Equals(string.Empty))
             {
@@ -121,7 +133,7 @@ namespace Rule_Engine_Challenge
             base.OnPreviewTextInput(e);
         }
 
-        private void EnableCreateButton()
+        private void EnableCreateButton() // Check if user have selected all required details and enable Create button
         {
             if (ComboSignal.SelectedIndex == 0 || ComboDataType.SelectedIndex == 0 || ComboOptions.SelectedIndex == 0)
             {

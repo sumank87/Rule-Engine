@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
@@ -18,27 +17,29 @@ namespace Rule_Engine_Challenge
     {
         OpenFileDialog openDialog;
         CreateRuleWindow createNewWindow;
+        // Store results
         ObservableCollection<ResultData> Result = new ObservableCollection<ResultData>();
         
         public MainWindow()
         {
             InitializeComponent();
-            openDialog = new OpenFileDialog();
-            createNewWindow = new CreateRuleWindow(this);
-            RuleManager.InitializeRuleManager();
-            ListViewRules.DataContext = RuleManager.RuleSet.ListRule;
-            ListViewResult.DataContext = Result;
+            openDialog = new OpenFileDialog(); // Initilize OpenFileDialog which will be used for selecting test case json file
+            createNewWindow = new CreateRuleWindow(this); // CreateRuleWindow will let user create new rule(s)
+            RuleManager.InitializeRuleManager(); // Initilize RuleManager, a class which handles rules
+            ListViewRules.DataContext = RuleManager.RuleSet.ListRule; // ListRule is a object version of rules
+            ListViewResult.DataContext = Result; // Result is ObservableCollection of ResultData
             //RuleManager.WriteNewRule("ALT3","Integer","GreterThan","300.00");
         }
 
         private void BtnChoose_Click(object sender, RoutedEventArgs e)
         {
-            TxtbError.Visibility = Visibility.Collapsed;
-            openDialog.Filter = "Json File|*.json";
+            TxtbError.Visibility = Visibility.Collapsed; // Collapse error if already there
+            openDialog.Filter = "Json File|*.json"; // Filter file of type json
             openDialog.Title = "Choose Test Case File";
             bool? IsOpenClicked = openDialog.ShowDialog();
             if (IsOpenClicked == true)
             {
+                // Display file name on mainwindow
                 TxtbFileName.Text = openDialog.SafeFileName;
             }
         }
@@ -47,25 +48,29 @@ namespace Rule_Engine_Challenge
         {
             if (openDialog.FileName.Equals(string.Empty))
             {
+                // Can't procced with a test case file
                 TxtbError.Visibility = Visibility.Visible;
-                TxtbError.Text = "Cannot proceed without a test case file.";
+                TxtbError.Text = Properties.Resources.CannotproceedwithoutTestcase;
                 return;
             }
             if(RuleManager.RuleSet.ListRule.Count==0)
             {
+                // If there is not rule created yeat
                 TxtbError.Visibility = Visibility.Visible;
-                TxtbError.Text = "You haven't created rule(s) yet. Feel free to create a rule at least.";
+                TxtbError.Text = Properties.Resources.YouHaveNotCreatedRuleYet;
                 return;
             }
-            TxtbError.Visibility = Visibility.Collapsed;
-            MemoryStream stream = new MemoryStream(File.ReadAllBytes(openDialog.FileName));
+            TxtbError.Visibility = Visibility.Collapsed; // Hile error, Everything looks good
+            MemoryStream stream = new MemoryStream(File.ReadAllBytes(openDialog.FileName)); // Resd test case file using MemoryStream
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(StreamData[]));
-            StreamData[] result = serializer.ReadObject(stream) as StreamData[];
+            StreamData[] result = serializer.ReadObject(stream) as StreamData[]; // Convery test case file into StreamData object array
             stream.Flush(); // Clear memory stream
             Result.Clear(); // Clear before adding new result
             ValidateStreamData(result);
             //var date = DateTime.Parse("2017-07-26 16:35:11", CultureInfo.CurrentCulture);
         }
+
+        #region Main Algorithm
 
         private void ValidateStreamData(StreamData []streamData)
         {
@@ -73,11 +78,11 @@ namespace Rule_Engine_Challenge
             {
                 // Find all maching rules for a Signal with a Value Type
                 ObservableCollection<Rule> listOfMatchingRules = new ObservableCollection<Rule>(RuleManager.RuleSet.ListRule.Where(n => (n.Signal == data.signal && n.DataType==data.value_type)));
-                int count = 0;
                 foreach(Rule rule in listOfMatchingRules) // Validate for all rules for a signal with a value type
                 {
                     if (!IsValid(data, rule))
                     {
+                        // If a StreamData is against a rule add them to Result list
                         Result.Add(new ResultData { Signal = data.signal, Option = rule.Option, ValueRule = rule.Value, ValueStream = data.value });
                     }
                 }
@@ -86,7 +91,8 @@ namespace Rule_Engine_Challenge
 
         private bool IsValid(StreamData streamData, Rule ruleData)
         {
-            switch(streamData.value_type)
+            // Choose comparison method based on Value Type of Signal Data 
+            switch (streamData.value_type)
             {
                 case "Integer": return IntegerCompare(ruleData.Option, double.Parse(streamData.value), double.Parse(ruleData.Value));
                 case "Datetime": return DatetimeCompare(ruleData.Option, streamData.value, ruleData.Value);
@@ -97,6 +103,7 @@ namespace Rule_Engine_Challenge
 
         public bool IntegerCompare<T>(string option, T dataValue, T ruleValue) where T : IComparable<T>
         {
+            // Compare data based on options
             switch (option)
             {
                 case "should not be greater than": return dataValue.CompareTo(ruleValue) < 0;
@@ -105,47 +112,41 @@ namespace Rule_Engine_Challenge
                 case "should not be less than": return dataValue.CompareTo(ruleValue) > 0;
                 case "should be equal to": return dataValue.Equals(ruleValue);
                 case "should not be equal to": return !dataValue.Equals(ruleValue);
-                default: throw new ArgumentException("Invalid comparison operator: {0}", option);
+                default: return false;
             }
         }
 
         public bool DatetimeCompare(string option, string dataValue, string ruleValue) 
         {
+            // Compare data based on options
             switch (option)
             {
                 case "should be in": 
                     if(ruleValue.Equals("future"))
-                    {
-                        var date = DateTime.Parse(dataValue, CultureInfo.CurrentCulture);
-                        int abc = DateTime.Compare(DateTime.Parse(dataValue, CultureInfo.CurrentCulture), DateTime.Now);
                         return DateTime.Compare(DateTime.Parse(dataValue, CultureInfo.CurrentCulture), DateTime.Now) > 0;
-                    }
                     else
-                    {
                         return DateTime.Compare(DateTime.Parse(dataValue, CultureInfo.CurrentCulture), DateTime.Now) < 0;
-                    }
                 case "should not be in":
                     if (ruleValue.Equals("future"))
-                    {
                         return DateTime.Compare(DateTime.Parse(dataValue, CultureInfo.CurrentCulture), DateTime.Now) < 0;
-                    }
                     else
-                    {
                         return DateTime.Compare(DateTime.Parse(dataValue, CultureInfo.CurrentCulture), DateTime.Now) > 0;
-                    }
-                default: throw new ArgumentException("Invalid comparison operator: {0}", option);
+                default: return false;
             }
         }
 
         public bool StringCompare<T>(string option, T dataValue, T ruleValue) where T : IComparable<T>
         {
+            // Compare data based on options
             switch (option)
             {
                 case "should be": return dataValue.Equals(ruleValue);
                 case "should not be": return !dataValue.Equals(ruleValue);
-                default: throw new ArgumentException("Invalid comparison operator: {0}", option);
+                default: return false;
             }
         }
+
+        #endregion
 
         private void BtnCreateNew_Click(object sender, RoutedEventArgs e)
         {
@@ -167,6 +168,7 @@ namespace Rule_Engine_Challenge
 
         private void BtnCross_Click(object sender, RoutedEventArgs e)
         {
+            // Delete a rule
             RuleManager.DeleteRule((int)(sender as Button).Tag);
         }
     }

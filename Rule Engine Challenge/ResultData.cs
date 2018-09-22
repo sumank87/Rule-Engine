@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Rule_Engine_Challenge
 {
+    /// <summary>
+    /// Have properties for Results
+    /// </summary>
     public class ResultData
     {
         public string Signal { get; set; }
