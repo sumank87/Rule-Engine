@@ -2,7 +2,7 @@
 A WPF application which is able to let user create multiple rules on stream data and will validate data against rules.
 
 #### Briefly describe the conceptual approach you chose! What are the trade-offs?
-WPF applicaion was choosen because its come with all inbuilt controls which helps me create solution quickly.When you are useing build in framework of WPF you need to worry about taking inputs as well as how you will formate output. But WPF comes with trade-offs. Like: its based on window OS which is non-portable to any other OS directly. 
+WPF applicaion was choosen because its come with all inbuilt controls which helps me create solution quickly. When you are using build in framework of WPF you need not to worry about taking inputs as well as how you will format output. But WPF comes with some limitations, Like: its based on window OS which is non-portable to any other OS directly. 
 
 
 #### What's the runtime performance? What is the complexity? Where are the bottlenecks?
